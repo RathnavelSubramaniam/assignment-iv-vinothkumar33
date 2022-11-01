@@ -1,0 +1,142 @@
+---
+title: "Unit 4 Assignment"
+author: "Vinoth kumar"
+date: "2022-10-31"
+output: html_document
+---
+
+1.	We continue to consider the use of a logistic regression model to predict the probability 
+	Of default using income and balance on the Default data set. In particular, we will now 
+compute estimates for the standard errors of the income and balance logistic regression
+ coefficients in two different ways: (1) using the bootstrap, and (2) using the standard 
+formula for computing the standard errors in the glm () function. Do not forget to set a 
+random seed before beginning your analysis.
+
+```{r}
+library(MASS)
+library(ISLR)
+library(boot)
+```
+
+(a) Using the summary () and glm() functions, determine the estimated standard errors for the coefficients associated with income and balance in a multiple logistic regression model that uses both predictors.
+
+```{r}
+set.seed(1)
+attach(Default)
+```
+
+```{r}
+glm.fit = glm(default~income+balance, data=Default, family="binomial")
+summary(glm.fit)
+
+```
+  Ans:- The estimated standard errors for the coefficients associated with income and balance is 4.985e-06 and             2.274e-04.
+	 
+(b) Write a function, boot.fn(), that takes as input the Default data set as well as an index of the observations, and that outputs the coefficient estimates for income and balance in the multiple logistic regression model.
+
+```{r}
+boot.fn = function(data, index){
+ 
+  return(coef(glm(default~income+balance, data=Default, family="binomial", subset=index)))  
+}
+boot.fn(Default, 1:nrow(Default))
+
+```
+
+  Ans:- The boot.fn function return the coefficient value of the income and balance  2.080898e-05 and 5.647103e-03.
+
+ (c) Use the boot() function together with your boot.fn() function to estimate the standard errors of the logistic regression coefficients for “income” and “balance”.
+
+```{r}
+boot(Default, boot.fn, 1000)
+```
+
+  Ans:-
+
+ (d) Comment on the estimated standard errors obtained using the glm() function and using your bootstrap function.
+
+  Ans:- 
+
+
+2.	we saw that the cv.glm() function can be used in order to compute the LOOCV test error 
+	estimate. Alternatively, one could compute those quantities using just the glm() and 
+	predict.glm() functions, and a for loop. You will now take this approach in order to 
+	compute the LOOCV error for a simple logistic regression model on the Weekly data set. 
+	
+```{r}
+
+```
+	
+(a) Fit a logistic regression model that predicts Direction using Lag1 and Lag2.
+
+```{r}
+set.seed(1)
+Weekly
+
+```
+
+
+```{r}
+glm.fit.1 = glm(Direction ~ Lag1 + Lag2, data=Weekly, family="binomial")
+summary(glm.fit.1)
+
+```
+
+  Ans:- Finding the Glm function for the variable Lag1 and Lag2
+  
+ (b).Fit a logistic regression model that predicts Direction using Lag1 and Lag2 using all but the first observation.
+
+```{r}
+
+glm.fit2 = glm(Direction ~ Lag1 + Lag2, data=Weekly[-1, ], family="binomial")
+summary(glm.fit2)
+
+```
+
+  Ans:- Finding the Glm function for the variable Lag1 and Lag2 here we exclude the first column by LOOCV method
+
+ (c) Use the model from (b) to predict the direction of the first observation. You can do this by predicting that the first observation will go up if P(Direction="Up"|Lag1, Lag2) > 0.5. Was this observation correctly classified?
+
+```{r}
+predict(glm.fit2, Weekly[1, ], type="response")>0.5
+
+```
+
+```{r}
+Weekly[1,]$Direction
+```
+
+  Ans:- The First Column Value is greater than 0.5 and the result is true and the direction is Down so the first value is wrong
+
+ (d) Write a for loop from i = 1 to i = n, where n is the number of observations in the data set, that performs each of the following steps:
+ i. Fit a logistic regression model using all but the ith observation to predict Direction using Lag1 and Lag2.
+ ii. Compute the posterior probability of the market moving up for the ith observation. 
+iii. Use the posterior probability for the ith observation in order to predict whether or not the market moves up. 
+
+```{r}
+error <- rep(0, nrow(Weekly))
+for (i in 1:nrow(Weekly)){
+ fit =  glm(Direction ~ Lag1+Lag2, data=Weekly[-i, ], family=binomial)
+ pred = predict(fit, Weekly[i, ], type="response") > 0.5
+ true <- Weekly[i, ]$Direction == "Up"
+ if (pred != true)
+   error[i] = 1
+}
+pred
+true
+error
+```
+
+  Ans:- Here we use for loop and check thee value for all values column is true and the error row value has changed to 0 and 1 by refering it as true or false.
+  
+
+iv. Determine whether or not an error was made in predicting the direction for the ith observation. If an error was made, then indicate this as a 1, and otherwise indicate it as a 0.
+ (e) Take the average of the n numbers obtained in (d)iv in order to obtain the LOOCV estimate for the test error. Comment on the results
+
+
+```{r}
+
+mean(error)
+
+```
+
